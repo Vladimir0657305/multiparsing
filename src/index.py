@@ -12,7 +12,7 @@ load_dotenv()
 
 last_page = 3
 
-base_url = "https://app.dealroom.co/"
+base_url = "https://coinmarketcap.com/"
 firms_data = []
 
 # Получение учетных данных прокси-сервера из переменных окружения
@@ -37,9 +37,7 @@ session.proxies = {
 # Создаем список для хранения всех ссылок на врачей
 all_coin_links = []
 
-page = 1
-# Создаем глобальный счетчик
-counter = 1
+
 
 # Сохраняем результаты в CSV-файл
 # with open('dealroom_data.csv', 'w', newline='', encoding='utf-8') as file:
@@ -52,6 +50,7 @@ counter = 1
 def get_html(url):
     # Загружаем страницу
     response = session.get(url)
+    # print(response)
     # Ожидание загрузки страницы
     time.sleep(10)
     return response.text
@@ -59,18 +58,28 @@ def get_html(url):
 def get_all_links(html):
     # Получение HTML-кода страницы с результатами поиска
     soup = BeautifulSoup(html, 'html.parser')
-    links = soup.find_all('a', class_='cmc-link')
-    print(links)
+    out = soup.find('table', class_='sc-beb003d5-3')
+    links = out.find_all('a', class_='cmc-link')
+    links_all = [urljoin(base_url, link.get('href', '')) for link in links]
+    return links_all
+
 
 
 def main():
+    page = 1
+    # Создаем глобальный счетчик
+    counter = 1
     while True:
         # Формируем ссылку на текущую страницу
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
+        html = get_html(url)
+        all_coin_links = get_all_links(html)
+        print(all_coin_links)
         
-        all_coin_links = [urljoin(base_url, link['href']) for link in links]
+        
+        
 
-
+        print('PAGE=>', page)
         # Условие выхода из цикла
         if page >= last_page:
             break
