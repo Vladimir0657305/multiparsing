@@ -1,6 +1,7 @@
 import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
+from datetime import datetime
 import time
 import csv
 import os
@@ -39,13 +40,7 @@ all_coin_links = []
 
 
 
-# Сохраняем результаты в CSV-файл
-# with open('dealroom_data.csv', 'w', newline='', encoding='utf-8') as file:
-#     fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
-# writer = csv.DictWriter(file, fieldnames=fieldnames)
-# writer.writeheader()
-# for firm_data in firms_data:
-#     writer.writerow(firm_data)
+
 
 def get_html(url):
     # Загружаем страницу
@@ -64,8 +59,33 @@ def get_all_links(html):
     return links_all
 
 
+def get_page_data(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    try:
+        name = soup.find('h1', class_='base-text').text.strip()
+    except:
+        name = 'No name data'
+    try:
+        price_div = soup.find('div', class_='alignBaseline')
+        price = price_div.find('span', class_='base-text').text.strip()
+    except:
+        name = 'No price data'
+    data = { 'name': name, 'price': price}
+    return data
+
+# Сохраняем результаты в CSV-файл
+def write_csv(data):
+    with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
+        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        writer = csv.writer(file)
+        # writer.writeheader()
+        # for firm_data in firms_data:
+        writer.writerow( (counter, data['name'], data['price'] ))
+        print( data['name'] )
+
 
 def main():
+    start = datetime.now()
     page = 1
     # Создаем глобальный счетчик
     counter = 1
@@ -74,20 +94,22 @@ def main():
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
         html = get_html(url)
         all_coin_links = get_all_links(html)
-        print(all_coin_links)
-        
-        
-        
-
-        print('PAGE=>', page)
+        print('PAGE=>', page, all_coin_links)
+        counter += 1
         # Условие выхода из цикла
         if page >= last_page:
             break
         else:
             page += 1
 
+    # for link in all_coin_links:
+    #     html = get_html(link)
+    #     data = get_page_data(html)
+    #     write_csv(data)
     
-
+    end = datetime.now()
+    total = end - start
+    print('TOTAL TIME=>', str(total))
 
 if __name__ == '__main__':
     main()
