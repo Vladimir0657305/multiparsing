@@ -11,7 +11,7 @@ import dotenv
 from dotenv import load_dotenv
 load_dotenv()
 
-last_page = 3
+last_page = 2
 
 base_url = "https://coinmarketcap.com/"
 firms_data = []
@@ -54,8 +54,9 @@ def get_all_links(html):
     # Получение HTML-кода страницы с результатами поиска
     soup = BeautifulSoup(html, 'html.parser')
     out = soup.find('table', class_='sc-beb003d5-3')
-    links = out.find_all('a', class_='cmc-link')
-    links_all = [urljoin(base_url, link.get('href', '')) for link in links]
+    # links_all = [urljoin(base_url, td.find('a', class_='cmc-link').get('href', '')) for td in out.find_all('td')]
+    links_all = [urljoin(base_url, td.find('a', class_='cmc-link').get('href', '')) for td in out.find_all('td') if td.find('a', class_='cmc-link') is not None]
+
     return links_all
 
 
@@ -74,14 +75,22 @@ def get_page_data(html):
     return data
 
 # Сохраняем результаты в CSV-файл
-def write_csv(data):
+def write_csv(counter, data):
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
         # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
         writer = csv.writer(file)
         # writer.writeheader()
-        # for firm_data in firms_data:
         writer.writerow( (counter, data['name'], data['price'] ))
-        print( data['name'] )
+        print( counter, data['name'] )
+
+def write_csv_links(counter, data):
+    with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
+        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        writer = csv.writer(file)
+        # writer.writeheader()
+        for i in data:
+            writer.writerow( (counter, i ))
+            print( counter, i )
 
 
 def main():
@@ -94,7 +103,9 @@ def main():
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
         html = get_html(url)
         all_coin_links = get_all_links(html)
+        write_csv_links(counter, all_coin_links)
         print('PAGE=>', page, all_coin_links)
+
         counter += 1
         # Условие выхода из цикла
         if page >= last_page:
