@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import time
 import csv
+import re
 import os
 import dotenv
 
@@ -87,21 +88,23 @@ def get_all_links(counter, html):
         for tr in trs:
             tds = tr.find_all('td')
             if len(tds) >= 4:
-                td = tds[3]
+                td = tds[2]
                 link = td.find('a', class_='cmc-link')
                 if link is not None:
                     href = link.get('href')
-                    print('HREF->', href)
                     links_all.append(urljoin(base_url, href))
-    print('PPPPPPPPPPPPPPPPPPPPPP=>',links_all)
     return links_all
 
-
+def get_html_data(url):
+    response = requests.get(url)
+    time.sleep(1)
+    return response.text
 
 def get_page_data(html):
     soup = BeautifulSoup(html, 'html.parser')
     try:
         name = soup.find('h1', class_='base-text').text.strip()
+        print(name)
     except:
         name = 'No name data'
     try:
@@ -113,13 +116,13 @@ def get_page_data(html):
     return data
 
 # Сохраняем результаты в CSV-файл
-def write_csv(counter, data):
+def write_csv(data):
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
         # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
         writer = csv.writer(file)
         # writer.writeheader()
-        writer.writerow( (counter, data['name'], data['price'] ))
-        print( counter, data['name'] )
+        writer.writerow( ( data['name'], data['price'] ))
+        print( data['name'] )
 
 def write_csv_links(data):
     counter = 1
@@ -128,7 +131,7 @@ def write_csv_links(data):
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
-            writer.writerow( (counter, i ))
+            writer.writerow( ( i ))
             print( 'SAVE=>', counter, i )
             counter += 1
 
@@ -145,8 +148,8 @@ def main():
 
         html = get_html(page, url)
         all_coin_links = get_all_links(counter, html)
-        write_csv_links(all_coin_links)
-        print('PAGE=>', page, all_coin_links)
+        # write_csv_links(all_coin_links)
+        # print('PAGE=>', page, all_coin_links)
 
         
         # Условие выхода из цикла
@@ -155,10 +158,10 @@ def main():
         else:
             page += 1
 
-    # for link in all_coin_links:
-    #     html = get_html(link)
-    #     data = get_page_data(html)
-    #     write_csv(data)
+    for link in all_coin_links:
+        html = get_html_data(link)
+        data = get_page_data(html)
+        write_csv(data)
     
     end = datetime.now()
     total = end - start
