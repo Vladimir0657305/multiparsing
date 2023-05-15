@@ -79,7 +79,7 @@ def get_html(page, url):
         time.sleep(1)
 
 
-def get_all_links(counter, html):
+def get_all_links(html):
     links_all = []
     soup = BeautifulSoup(html, 'html.parser')
     table = soup.find('table', class_='sc-beb003d5-3')
@@ -97,21 +97,41 @@ def get_all_links(counter, html):
 
 def get_html_data(url):
     response = requests.get(url)
-    time.sleep(1)
+    time.sleep(2)
     return response.text
 
-def get_page_data(html):
-    soup = BeautifulSoup(html, 'html.parser')
+def get_page_data(url):
+    response = requests.get(url)
+    time.sleep(1)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    name = 'None'
+    price = 'None'
     try:
-        name = soup.find('h1', class_='base-text').text.strip()
-        print(name)
+        # temp1 = soup.find('div', class_='cmc-body-wrapper')
+        # temp2 = temp1.find('div', class_='grid full-width-layout')
+        # temp3 = temp2.find('div', class_='sc-aef7b723-0 sc-6165fe1d-0')
+        # print(temp3)
+        # temp4 = temp2.find('div', class_='coin-stats')
+        # temp5 = temp2.find('div', class_='sc-8755d3ba-0 cQuGMr coin-stats-header')
+        # temp6 = temp5.find('div', class_='sc-8755d3ba-0 cHgeJt flexBetween')
+        # temp7 = temp6.find('div', class_='sc-8755d3ba-0 jsSKaf')
+        # name = temp7.find('span', class_='sc-8755d3ba-0 frXndb').text.strip()
+
+        name_label = soup.find('h1', class_='sc-8755d3ba-0 kGceQv base-text')
+        if name_label:
+            name = name_label.find('span', class_='sc-8755d3ba-0 frXndb').text.strip()
+        
     except:
-        name = 'No name data'
+        # name = soup.find('span', attrs={'data-role': 'coin-name'}).text.strip()
+        name = None
     try:
-        price_div = soup.find('div', class_='alignBaseline')
-        price = price_div.find('span', class_='base-text').text.strip()
+        price_div = soup.find('div', class_='sc-8755d3ba-0 fiIhCU flexStart alignBaseline')
+        price = price_div.find('span', class_='sc-8755d3ba-0 PaOrf base-text').text.strip()
+        if(price == None):
+            print(soup)
     except:
-        name = 'No price data'
+        pass
+    print('HHHHHHHHHHHHHH=>', name, price)
     data = { 'name': name, 'price': price}
     return data
 
@@ -122,16 +142,16 @@ def write_csv(data):
         writer = csv.writer(file)
         # writer.writeheader()
         writer.writerow( ( data['name'], data['price'] ))
-        print( data['name'] )
+        # print( data['name'] )
 
 def write_csv_links(data):
     counter = 1
-    with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
+    with open('coin_price_links.csv', 'a', newline='', encoding='utf-8') as file:
         # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
-            writer.writerow( ( i ))
+            writer.writerow(  [i] )
             print( 'SAVE=>', counter, i )
             counter += 1
 
@@ -139,6 +159,7 @@ def write_csv_links(data):
 def main():
     start = datetime.now()
     all_coin_links = []
+    all_coin_links_to_scrape = []
     page = 1
     # Создаем глобальный счетчик
     counter = 1
@@ -147,10 +168,11 @@ def main():
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
 
         html = get_html(page, url)
-        all_coin_links = get_all_links(counter, html)
-        # write_csv_links(all_coin_links)
+        all_coin_links = get_all_links(html)
+        write_csv_links(all_coin_links)
         # print('PAGE=>', page, all_coin_links)
-
+        all_coin_links_to_scrape.extend(all_coin_links)
+        # print('EEEEEEEEEEEEE', all_coin_links_to_scrape)
         
         # Условие выхода из цикла
         if page >= last_page:
@@ -158,9 +180,14 @@ def main():
         else:
             page += 1
 
-    for link in all_coin_links:
+    for link in all_coin_links_to_scrape:
+        print(link)
         html = get_html_data(link)
-        data = get_page_data(html)
+        data = get_page_data(link)
+        print('DATA=>', data)
+        if (data['name'] is None) or (data['price'] is None):
+            print('RE-DOWNLOAD',data['name'], data['price'], link)
+            data = get_page_data(link)
         write_csv(data)
     
     end = datetime.now()
