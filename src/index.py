@@ -52,43 +52,43 @@ def get_html(page, url):
     # Создаем объект драйвера
     driver = webdriver.Chrome()
 
-    # Получение HTML-кода страницы фирмы
-    soup = BeautifulSoup(response.content, 'html.parser')
-    tab =  soup.select_one('table')
-    try:
-        tds = tab.find_all('td')
-    except AttributeError:
-        pass
-
     # Загружаем страницу
     driver.get(url)
-    tabl = driver.find_elements(By.CSS_SELECTOR, 'table')
 
     while True:
-        try:
-            # Находим все элементы td на странице
-            tds = tabl.find_elements(By.CSS_SELECTOR, 'td')
-            print(tds)
-            for td in tds:
-                # print(td)
-                try:
-                    p = td.find('p', clacc_='sc-4984dd93-0.ihZPK')
-                    if p.text == 100 * page:
-                        # Получаем HTML-код таблицы
-                        html = table.get_attribute('outerHTML')
+        # Получение HTML-кода страницы фирмы
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        tab = soup.select_one('table')
+        tds = tab.find_all('td')
 
-                        # Закрываем драйвер
-                        driver.quit()
+        for td in tds:
+            try:
+                p = td.find('p', class_='sc-4984dd93-0 ihZPK')
 
-                        return html
-                except:
-                    pass
+                if p.text == str(100 * page):
+                    print('!!!!!!!!!!!!!!!!!!!!!!!=>',p.text, 100*page)
+                    # Получаем HTML-код таблицы
+                    html = driver.page_source
 
-            # Если не нашли нужный элемент, прокручиваем страницу
-            driver.execute_script("window.scrollBy(0, 3000);")
+                    # Закрываем драйвер
+                    driver.quit()
 
-        except NoSuchElementException:
-            pass
+                    return html
+            except:
+                pass
+
+        # Если не нашли нужный элемент, прокручиваем страницу
+        driver.execute_script("window.scrollBy(0, 4000);")
+        time.sleep(0.5)
+
+
+
+
+
+
+
+
+
 
 
 
