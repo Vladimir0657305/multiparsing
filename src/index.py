@@ -42,7 +42,7 @@ session.proxies = {
 # requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 # Создаем список для хранения всех ссылок на врачей
-all_coin_links = []
+
 
 
 
@@ -60,62 +60,42 @@ def get_html(page, url):
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         tab = soup.select_one('table')
         tds = tab.find_all('td')
-
         for td in tds:
             try:
                 p = td.find('p', class_='sc-4984dd93-0 ihZPK')
-
                 if p.text == str(100 * page):
                     print('!!!!!!!!!!!!!!!!!!!!!!!=>',p.text, 100*page)
                     # Получаем HTML-код таблицы
                     html = driver.page_source
-
                     # Закрываем драйвер
                     driver.quit()
-
                     return html
             except:
                 pass
 
         # Если не нашли нужный элемент, прокручиваем страницу
         driver.execute_script("window.scrollBy(0, 4000);")
-        time.sleep(0.5)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        time.sleep(1)
 
 
 def get_all_links(counter, html):
     links_all = []
-    # Получение HTML-кода страницы с результатами поиска
     soup = BeautifulSoup(html, 'html.parser')
-    last_div = soup.find('div', class_='sc-4984dd93-0 ihZPK')
-    print('!!!!!!!!!!!=>', last_div)
-    out = soup.find('table', class_='sc-beb003d5-3')
-    out_td = out.find_all('td')
-    # print(out_td)
-    for i in out_td:
-        temp = i.find('div', class_=('sc-cadad039-0', 'clgqXO'))
-        if temp is not None:
-            link = temp.find('a', class_='cmc-link')
-            if link is not None:
-                links_all.append(urljoin(base_url, link.get('href', '')))
-        
-    
-    counter += 1
+    table = soup.find('table', class_='sc-beb003d5-3')
+    if table is not None:
+        trs = table.find_all('tr')
+        for tr in trs:
+            tds = tr.find_all('td')
+            if len(tds) >= 4:
+                td = tds[3]
+                link = td.find('a', class_='cmc-link')
+                if link is not None:
+                    href = link.get('href')
+                    print('HREF->', href)
+                    links_all.append(urljoin(base_url, href))
+    print('PPPPPPPPPPPPPPPPPPPPPP=>',links_all)
     return links_all
+
 
 
 def get_page_data(html):
@@ -141,18 +121,21 @@ def write_csv(counter, data):
         writer.writerow( (counter, data['name'], data['price'] ))
         print( counter, data['name'] )
 
-def write_csv_links(counter, data):
+def write_csv_links(data):
+    counter = 1
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
         # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
             writer.writerow( (counter, i ))
-            print( counter, i )
+            print( 'SAVE=>', counter, i )
+            counter += 1
 
 
 def main():
     start = datetime.now()
+    all_coin_links = []
     page = 1
     # Создаем глобальный счетчик
     counter = 1
@@ -162,7 +145,7 @@ def main():
 
         html = get_html(page, url)
         all_coin_links = get_all_links(counter, html)
-        write_csv_links(counter, all_coin_links)
+        write_csv_links(all_coin_links)
         print('PAGE=>', page, all_coin_links)
 
         
