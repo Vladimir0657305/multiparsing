@@ -1,3 +1,9 @@
+from selenium import webdriver
+from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
@@ -42,21 +48,73 @@ all_coin_links = []
 
 
 
-def get_html(url):
-    # Загружаем страницу
-    response = session.get(url)
-    # print(response)
-    # Ожидание загрузки страницы
-    time.sleep(10)
-    return response.text
+def get_html(page, url):
+    # Создаем объект драйвера
+    driver = webdriver.Chrome()
 
-def get_all_links(html):
+    # Получение HTML-кода страницы фирмы
+    soup = BeautifulSoup(response.content, 'html.parser')
+    tab =  soup.select_one('table')
+    try:
+        tds = tab.find_all('td')
+    except AttributeError:
+        pass
+
+    # Загружаем страницу
+    driver.get(url)
+    tabl = driver.find_elements(By.CSS_SELECTOR, 'table')
+
+    while True:
+        try:
+            # Находим все элементы td на странице
+            tds = tabl.find_elements(By.CSS_SELECTOR, 'td')
+            print(tds)
+            for td in tds:
+                # print(td)
+                try:
+                    p = td.find('p', clacc_='sc-4984dd93-0.ihZPK')
+                    if p.text == 100 * page:
+                        # Получаем HTML-код таблицы
+                        html = table.get_attribute('outerHTML')
+
+                        # Закрываем драйвер
+                        driver.quit()
+
+                        return html
+                except:
+                    pass
+
+            # Если не нашли нужный элемент, прокручиваем страницу
+            driver.execute_script("window.scrollBy(0, 3000);")
+
+        except NoSuchElementException:
+            pass
+
+
+
+
+
+
+
+
+def get_all_links(counter, html):
+    links_all = []
     # Получение HTML-кода страницы с результатами поиска
     soup = BeautifulSoup(html, 'html.parser')
+    last_div = soup.find('div', class_='sc-4984dd93-0 ihZPK')
+    print('!!!!!!!!!!!=>', last_div)
     out = soup.find('table', class_='sc-beb003d5-3')
-    # links_all = [urljoin(base_url, td.find('a', class_='cmc-link').get('href', '')) for td in out.find_all('td')]
-    links_all = [urljoin(base_url, td.find('a', class_='cmc-link').get('href', '')) for td in out.find_all('td') if td.find('a', class_='cmc-link') is not None]
-
+    out_td = out.find_all('td')
+    # print(out_td)
+    for i in out_td:
+        temp = i.find('div', class_=('sc-cadad039-0', 'clgqXO'))
+        if temp is not None:
+            link = temp.find('a', class_='cmc-link')
+            if link is not None:
+                links_all.append(urljoin(base_url, link.get('href', '')))
+        
+    
+    counter += 1
     return links_all
 
 
@@ -101,12 +159,13 @@ def main():
     while True:
         # Формируем ссылку на текущую страницу
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
-        html = get_html(url)
-        all_coin_links = get_all_links(html)
+
+        html = get_html(page, url)
+        all_coin_links = get_all_links(counter, html)
         write_csv_links(counter, all_coin_links)
         print('PAGE=>', page, all_coin_links)
 
-        counter += 1
+        
         # Условие выхода из цикла
         if page >= last_page:
             break
