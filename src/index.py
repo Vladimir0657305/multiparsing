@@ -181,14 +181,15 @@ def main():
             page += 1
 
     for link in all_coin_links_to_scrape:
-        print(link)
         html = get_html_data(link)
         data = get_page_data(link)
-        print('DATA=>', data)
-        if (data['name'] is None) or (data['price'] is None):
+        print('DATA=>', data, link)
+        if ((data['name'] == 'None') ):
             print('RE-DOWNLOAD',data['name'], data['price'], link)
             data = get_page_data(link)
-        write_csv(data)
+        if (data['name'] != 'None'):
+            print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
+            write_csv(data)
     
     end = datetime.now()
     total = end - start
