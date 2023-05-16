@@ -186,6 +186,7 @@ def main():
         print('DATA=>', data, link)
         while data['name'] == 'None':
             print('RE-DOWNLOAD', data['name'], data['price'], link)
+            time.sleep(2)
             data = get_page_data(link)
         if (data['name'] != 'None'):
             print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
