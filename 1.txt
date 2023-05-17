@@ -10,3 +10,10 @@ https://www.youtube.com/watch?v=IGPUs49a1Zo
 https://www.youtube.com/watch?v=3GWypc7dhCM
 https://www.youtube.com/watch?v=_12U6Zfi5ik
 
+https://www.youtube.com/watch?v=3jMA7fdVI2s - Python | Автоматизируем ВКонтакте | Selenium 4 | Аутентификация, скролл, нахождение элементов, клики
+https://www.youtube.com/watch?v=T-F_rvUAPvg  - Парсинг сайтов на Python | Обходим обнаружение парсера с Selenium Stealth
+https://www.youtube.com/watch?v=_12U6Zfi5ik - Парсинг на Python | Подмена IP-адреса | Запросы через прокси | Proxy with Python Requests
+https://www.youtube.com/watch?v=rsG1Y5k-9jo - Виртуальное окружение в Python | Менеджер пакетов PIP | Файл requirements.txt
+https://www.youtube.com/watch?v=lOfm04oLD1U&list=PLNi5HdK6QEmWdZmDJM0Yb6qEGepZhsJQL&index=2 - Учим парсинг на python и bs4 Курс по парсингу веб сайтов на python с нуля профессия backend аналитик
+https://www.youtube.com/watch?v=HfBJ0_1c4PU&list=PLNi5HdK6QEmWdZmDJM0Yb6qEGepZhsJQL - Python requests http, https запросы, requests методы get и post, подключаемся к api через python
+

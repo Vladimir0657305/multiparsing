@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,7 +19,7 @@ import dotenv
 from dotenv import load_dotenv
 load_dotenv()
 
-last_page = 2
+last_page = 97
 
 base_url = "https://coinmarketcap.com/"
 firms_data = []
@@ -50,8 +51,12 @@ session.proxies = {
 
 
 def get_html(page, url):
+
+    options = Options()
+    options.add_argument('--headless')
+
     # Создаем объект драйвера
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(options=options)
 
     # Загружаем страницу
     driver.get(url)
