@@ -1,4 +1,7 @@
 # multiparsing
+
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&pause=1000&width=435&lines=Scraping+coinmarketcap.com+site)](https://git.io/typing-svg)
+
 This code parses data from the CoinMarketCap website.
 
 1. Required modules and libraries are imported, such as selenium, requests, multiprocessing, urllib.parse, BeautifulSoup, datetime, time, csv, os and dotenv.
