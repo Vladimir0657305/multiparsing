@@ -1,17 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver import Chrome
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver import Chrome
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.keys import Keys
 import requests
+from multiprocessing import Pool
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time
 import csv
-import re
+# import re
 import os
 import dotenv
 
@@ -19,7 +20,7 @@ import dotenv
 from dotenv import load_dotenv
 load_dotenv()
 
-last_page = 97
+last_page = 3
 
 base_url = "https://coinmarketcap.com/"
 firms_data = []
@@ -43,13 +44,6 @@ session.proxies = {
 # Отключение проверки SSL-сертификатов
 # requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
-# Создаем список для хранения всех ссылок на врачей
-
-
-
-
-
-
 def get_html(page, url):
 
     options = Options()
@@ -70,7 +64,7 @@ def get_html(page, url):
             try:
                 p = td.find('p', class_='sc-4984dd93-0 ihZPK')
                 if p.text == str(100 * page):
-                    print('!!!!!!!!!!!!!!!!!!!!!!!=>',p.text, 100*page)
+                    print('!!!!!!!!!!!!!!!!!!!!!!!=>', p.text, 100*page)
                     # Получаем HTML-код таблицы
                     html = driver.page_source
                     # Закрываем драйвер
@@ -107,67 +101,66 @@ def get_html_data(url):
 
 def get_page_data(url):
     response = requests.get(url)
+    # response = session.get(url)
     time.sleep(1)
     soup = BeautifulSoup(response.text, 'html.parser')
     name = 'None'
     price = 'None'
     try:
-        # temp1 = soup.find('div', class_='cmc-body-wrapper')
-        # temp2 = temp1.find('div', class_='grid full-width-layout')
-        # temp3 = temp2.find('div', class_='sc-aef7b723-0 sc-6165fe1d-0')
-        # print(temp3)
-        # temp4 = temp2.find('div', class_='coin-stats')
-        # temp5 = temp2.find('div', class_='sc-8755d3ba-0 cQuGMr coin-stats-header')
-        # temp6 = temp5.find('div', class_='sc-8755d3ba-0 cHgeJt flexBetween')
-        # temp7 = temp6.find('div', class_='sc-8755d3ba-0 jsSKaf')
-        # name = temp7.find('span', class_='sc-8755d3ba-0 frXndb').text.strip()
-
         name_label = soup.find('h1', class_='sc-8755d3ba-0 kGceQv base-text')
         if name_label:
-            name = name_label.find('span', class_='sc-8755d3ba-0 frXndb').text.strip()
-        
+            name = name_label.find(
+                'span', class_='sc-8755d3ba-0 frXndb').text.strip()
+
     except:
-        # name = soup.find('span', attrs={'data-role': 'coin-name'}).text.strip()
         name = None
     try:
-        price_div = soup.find('div', class_='sc-8755d3ba-0 fiIhCU flexStart alignBaseline')
-        price = price_div.find('span', class_='sc-8755d3ba-0 PaOrf base-text').text.strip()
-        if(price == None):
+        price_div = soup.find(
+            'div', class_='sc-8755d3ba-0 fiIhCU flexStart alignBaseline')
+        price = price_div.find(
+            'span', class_='sc-8755d3ba-0 PaOrf base-text').text.strip()
+        if (price == None):
             print(soup)
     except:
         pass
-    print('HHHHHHHHHHHHHH=>', name, price)
-    data = { 'name': name, 'price': price}
+    print('NAME PRICE=>', name, price)
+    data = {'name': name, 'price': price}
     return data
 
 # Сохраняем результаты в CSV-файл
 def write_csv(data):
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
-        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        # fieldnames = ['Name', 'Price']
         writer = csv.writer(file)
         # writer.writeheader()
-        writer.writerow( ( data['name'], data['price'] ))
-        # print( data['name'] )
+        writer.writerow((data['name'], data['price']))
 
 def write_csv_links(data):
-    counter = 1
     with open('coin_price_links.csv', 'a', newline='', encoding='utf-8') as file:
-        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        # fieldnames = ['Name', 'Price']
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
-            writer.writerow(  [i] )
-            print( 'SAVE=>', counter, i )
-            counter += 1
+            writer.writerow([i])
 
+def make_all(link):
+    data = get_page_data(link)
+    print('LINK=>',  link)
+    while data['name'] == 'None':
+        print('RE-DOWNLOAD', data['name'], data['price'], link)
+        time.sleep(1)
+        data = get_page_data(link)
+    if (data['name'] != 'None'):
+        print('DDDAAATTTTAAAA', data['name'], data['price'])
+        write_csv(data)
 
 def main():
     start = datetime.now()
     all_coin_links = []
     all_coin_links_to_scrape = []
     page = 1
-    # Создаем глобальный счетчик
-    counter = 1
+    
+    # В цикле while формируем список ссылок для парсинга
     while True:
         # Формируем ссылку на текущую страницу
         url = f'https://coinmarketcap.com/' if page == 1 else f'https://coinmarketcap.com/?page={page}'
@@ -175,28 +168,17 @@ def main():
         html = get_html(page, url)
         all_coin_links = get_all_links(html)
         write_csv_links(all_coin_links)
-        # print('PAGE=>', page, all_coin_links)
         all_coin_links_to_scrape.extend(all_coin_links)
-        # print('EEEEEEEEEEEEE', all_coin_links_to_scrape)
-        
+
         # Условие выхода из цикла
         if page >= last_page:
             break
         else:
             page += 1
 
-    for link in all_coin_links_to_scrape:
-        html = get_html_data(link)
-        data = get_page_data(link)
-        print('DATA=>', data, link)
-        while data['name'] == 'None':
-            print('RE-DOWNLOAD', data['name'], data['price'], link)
-            time.sleep(2)
-            data = get_page_data(link)
-        if (data['name'] != 'None'):
-            print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
-            write_csv(data)
-    
+    with Pool(10) as p:
+        p.map(make_all, all_coin_links_to_scrape)
+
     end = datetime.now()
     total = end - start
     print('TOTAL TIME=>', str(total))

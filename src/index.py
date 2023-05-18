@@ -1,10 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver import Chrome
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver import Chrome
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.keys import Keys
 import requests
 from multiprocessing import Pool
 from urllib.parse import urljoin
@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import time
 import csv
-import re
+# import re
 import os
 import dotenv
 
@@ -20,7 +20,7 @@ import dotenv
 from dotenv import load_dotenv
 load_dotenv()
 
-last_page = 97
+last_page = 3
 
 base_url = "https://coinmarketcap.com/"
 firms_data = []
@@ -43,9 +43,6 @@ session.proxies = {
 
 # Отключение проверки SSL-сертификатов
 # requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-
-# Создаем список для хранения всех ссылок на врачей
-
 
 def get_html(page, url):
 
@@ -97,15 +94,14 @@ def get_all_links(html):
                     links_all.append(urljoin(base_url, href))
     return links_all
 
-
 def get_html_data(url):
     response = requests.get(url)
     time.sleep(2)
     return response.text
 
-
 def get_page_data(url):
     response = requests.get(url)
+    # response = session.get(url)
     time.sleep(1)
     soup = BeautifulSoup(response.text, 'html.parser')
     name = 'None'
@@ -138,26 +134,22 @@ def get_page_data(url):
             print(soup)
     except:
         pass
-    print('HHHHHHHHHHHHHH=>', name, price)
+    print('NAME PRICE=>', name, price)
     data = {'name': name, 'price': price}
     return data
 
 # Сохраняем результаты в CSV-файл
-
-
 def write_csv(data):
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
-        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        # fieldnames = ['Name', 'Price']
         writer = csv.writer(file)
         # writer.writeheader()
         writer.writerow((data['name'], data['price']))
-        # print( data['name'] )
-
 
 def write_csv_links(data):
     counter = 1
     with open('coin_price_links.csv', 'a', newline='', encoding='utf-8') as file:
-        # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
+        # fieldnames = ['Name', 'Price']
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
@@ -165,9 +157,7 @@ def write_csv_links(data):
             print('SAVE=>', counter, i)
             counter += 1
 
-
 def make_all(link):
-    # html = get_html(url)
     data = get_page_data(link)
     print('LINK=>',  link)
     while data['name'] == 'None':
@@ -215,7 +205,7 @@ def main():
     #         print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
     #         write_csv(data)
 
-    with Pool(3) as p:
+    with Pool(10) as p:
         p.map(make_all, all_coin_links_to_scrape)
 
     end = datetime.now()
