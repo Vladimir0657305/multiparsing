@@ -1,6 +1,0 @@
-https://github.com/ultrafunkamsterdam/undetected-chromedriver
-
-
-driver.implicitly_wait(10)
-
-
