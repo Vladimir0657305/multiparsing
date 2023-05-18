@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import requests
-from multiprocessing import Pool
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -47,6 +46,10 @@ session.proxies = {
 # Создаем список для хранения всех ссылок на врачей
 
 
+
+
+
+
 def get_html(page, url):
 
     options = Options()
@@ -67,7 +70,7 @@ def get_html(page, url):
             try:
                 p = td.find('p', class_='sc-4984dd93-0 ihZPK')
                 if p.text == str(100 * page):
-                    print('!!!!!!!!!!!!!!!!!!!!!!!=>', p.text, 100*page)
+                    print('!!!!!!!!!!!!!!!!!!!!!!!=>',p.text, 100*page)
                     # Получаем HTML-код таблицы
                     html = driver.page_source
                     # Закрываем драйвер
@@ -97,12 +100,10 @@ def get_all_links(html):
                     links_all.append(urljoin(base_url, href))
     return links_all
 
-
 def get_html_data(url):
     response = requests.get(url)
     time.sleep(2)
     return response.text
-
 
 def get_page_data(url):
     response = requests.get(url)
@@ -123,36 +124,30 @@ def get_page_data(url):
 
         name_label = soup.find('h1', class_='sc-8755d3ba-0 kGceQv base-text')
         if name_label:
-            name = name_label.find(
-                'span', class_='sc-8755d3ba-0 frXndb').text.strip()
-
+            name = name_label.find('span', class_='sc-8755d3ba-0 frXndb').text.strip()
+        
     except:
         # name = soup.find('span', attrs={'data-role': 'coin-name'}).text.strip()
         name = None
     try:
-        price_div = soup.find(
-            'div', class_='sc-8755d3ba-0 fiIhCU flexStart alignBaseline')
-        price = price_div.find(
-            'span', class_='sc-8755d3ba-0 PaOrf base-text').text.strip()
-        if (price == None):
+        price_div = soup.find('div', class_='sc-8755d3ba-0 fiIhCU flexStart alignBaseline')
+        price = price_div.find('span', class_='sc-8755d3ba-0 PaOrf base-text').text.strip()
+        if(price == None):
             print(soup)
     except:
         pass
     print('HHHHHHHHHHHHHH=>', name, price)
-    data = {'name': name, 'price': price}
+    data = { 'name': name, 'price': price}
     return data
 
 # Сохраняем результаты в CSV-файл
-
-
 def write_csv(data):
     with open('coin_price_data.csv', 'a', newline='', encoding='utf-8') as file:
         # fieldnames = ['Name', 'Description', 'Website', 'LinkedIn']
         writer = csv.writer(file)
         # writer.writeheader()
-        writer.writerow((data['name'], data['price']))
+        writer.writerow( ( data['name'], data['price'] ))
         # print( data['name'] )
-
 
 def write_csv_links(data):
     counter = 1
@@ -161,22 +156,9 @@ def write_csv_links(data):
         writer = csv.writer(file)
         # writer.writeheader()
         for i in data:
-            writer.writerow([i])
-            print('SAVE=>', counter, i)
+            writer.writerow(  [i] )
+            print( 'SAVE=>', counter, i )
             counter += 1
-
-
-def make_all(link):
-    # html = get_html(url)
-    data = get_page_data(link)
-    print('LINK=>',  link)
-    while data['name'] == 'None':
-        print('RE-DOWNLOAD', data['name'], data['price'], link)
-        time.sleep(1)
-        data = get_page_data(link)
-    if (data['name'] != 'None'):
-        print('DDDAAATTTTAAAA', data['name'], data['price'])
-        write_csv(data)
 
 
 def main():
@@ -196,32 +178,28 @@ def main():
         # print('PAGE=>', page, all_coin_links)
         all_coin_links_to_scrape.extend(all_coin_links)
         # print('EEEEEEEEEEEEE', all_coin_links_to_scrape)
-
+        
         # Условие выхода из цикла
         if page >= last_page:
             break
         else:
             page += 1
 
-    # for link in all_coin_links_to_scrape:
-    #     html = get_html_data(link)
-    #     data = get_page_data(link)
-    #     print('DATA=>', data, link)
-    #     while data['name'] == 'None':
-    #         print('RE-DOWNLOAD', data['name'], data['price'], link)
-    #         time.sleep(2)
-    #         data = get_page_data(link)
-    #     if (data['name'] != 'None'):
-    #         print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
-    #         write_csv(data)
-
-    with Pool(3) as p:
-        p.map(make_all, all_coin_links_to_scrape)
-
+    for link in all_coin_links_to_scrape:
+        html = get_html_data(link)
+        data = get_page_data(link)
+        print('DATA=>', data, link)
+        while data['name'] == 'None':
+            print('RE-DOWNLOAD', data['name'], data['price'], link)
+            time.sleep(2)
+            data = get_page_data(link)
+        if (data['name'] != 'None'):
+            print('DDDAAATTTTAAAA', data['name'], data['price'], ((data['name'] is  None) and (data['price'] is  None)))
+            write_csv(data)
+    
     end = datetime.now()
     total = end - start
     print('TOTAL TIME=>', str(total))
-
 
 if __name__ == '__main__':
     main()
