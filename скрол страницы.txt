@@ -1,0 +1,67 @@
+def get_links(url):
+    
+    options = Options()
+    options.add_argument('--headless')
+
+    # driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome()
+    driver.get(url)
+    # wait = WebDriverWait(driver, 20)
+    time.sleep(20)
+
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    temp_l = soup.find(
+        'ul', class_='ij-List ij-List--vertical ij-List--spaced').find_all('li', class_='ij-List-item')
+    print('QQQQQQ===>', len(temp_l))
+
+    # scroll_y = driver.execute_script('return window.pageYOffset;')
+    # print('scroll_y===>', scroll_y)
+
+    all_links = []
+
+    while True:
+        # Получение высоты страницы
+        page_height = driver.execute_script('return document.documentElement.scrollHeight;')
+        print('page_height====>', page_height)
+
+        # Получение высоты видимой области окна браузера
+        window_height = driver.execute_script('return window.innerHeight;')
+        print('window_height====>', window_height)
+
+        # Получение текущего положения полосы прокрутки
+        scroll_y = driver.execute_script('return window.scrollY;')
+        print('scroll_y===>', scroll_y)
+
+        # Проверка условия для выполнения прокрутки
+        if scroll_y + window_height <= page_height:
+            # Прокрутка вниз
+            # driver.execute_script('window.scrollTo(0, document.documentElement.scrollHeight);')
+            driver.execute_script("window.scrollBy(0, 1000);")
+            # Добавьте задержку, чтобы страница успела загрузить новые элементы
+            time.sleep(1)
+
+            new_soup = BeautifulSoup(driver.page_source, 'html.parser')
+            new_links = new_soup.find(
+                'ul', class_='ij-List ij-List--vertical ij-List--spaced').find_all('li', class_='ij-List-item')
+            for new_link in new_links:
+                try:
+                    link = new_link.find(
+                        'h2', class_='ij-OfferCardContent-description-title').find('a', href=True).get('href').split('?')[0]
+                    t = 'https:' + link
+                    if t not in all_links:  # Проверка на дублирование ссылок
+                        all_links.append(t)
+                except:
+                    pass
+
+            
+            if scroll_y + window_height >= page_height: 
+                driver.quit()
+                break
+
+        else:
+            break
+
+    write_csv_links(all_links)
+    # for link in all_links:
+    #     print('ALL=>', f'{link}\n')
+    return all_links
